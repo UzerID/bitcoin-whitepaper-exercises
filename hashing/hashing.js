@@ -1,6 +1,7 @@
 "use strict";
 
-var crypto = require("crypto");
+// const keccak256 = require('keccak256');
+const crypto = require("crypto");
 
 // The Power of a Smile
 // by Tupac Shakur
@@ -27,17 +28,52 @@ Blockchain.blocks.push({
 	timestamp: Date.now(),
 });
 
-// TODO: insert each line into blockchain
-// for (let line of poem) {
-// }
+function createBlock(_data) {
+	const blockchainLength = Blockchain.blocks.length;
+	let block = {
+		index: blockchainLength,
+		prevHash: Blockchain.blocks[blockchainLength-1].hash,
+		data: _data,
+		timestamp: Date.now()
+	}
+	block.hash = blockHash(block);
+	return block;
+}
 
-// console.log(`Blockchain is valid: ${verifyChain(Blockchain)}`);
+// TODO: insert each line into blockchain
+for (let line of poem) {
+	Blockchain.blocks.push(createBlock(line));
+}
+
+console.log(`Blockchain is valid: ${verifyChain(Blockchain)}`);
 
 
 // **********************************
 
 function blockHash(bl) {
-	return crypto.createHash("sha256").update(
-		// TODO: use block data to calculate hash
-	).digest("hex");
+	return crypto.createHash("sha256").update(JSON.stringify(bl)).digest("hex");
 }
+
+function verifyChain(blockchain) {
+	let isValid = true;
+	for (const [i, block] of blockchain.blocks.entries()) {
+		if (block.index < 0 || block.data == undefined
+			|| (block.index > 0 && block.prevHash != blockchain.blocks[i-1].hash)) {
+				isValid = false;
+				break;
+			}
+		let hash = "000000"
+		if (block.index > 0) {
+			let clone = Object.assign({}, block);
+			delete clone.hash;
+			hash = blockHash(clone);
+		}
+		if (block.hash != hash) {
+			isValid = false;
+			break;
+		}
+
+	}
+	return isValid;
+}
+// console.log(Blockchain.blocks)
